@@ -1,39 +1,34 @@
 """
 models.py - NumberSort Action, Observation, State models for OpenEnv.
+Uses Pydantic v2 models as required by openenv-core.
 """
-
 from __future__ import annotations
-from dataclasses import dataclass, field
-
+from typing import List
 try:
     from openenv.core.env_server import Action, Observation, State
 except ImportError:
-    @dataclass
-    class Action:
-        pass
-    @dataclass
-    class Observation:
+    from pydantic import BaseModel
+    class Action(BaseModel):
+        model_config = {"extra": "allow"}
+    class Observation(BaseModel):
+        model_config = {"extra": "allow"}
         reward: float = 0.0
         done: bool = False
-    @dataclass
-    class State:
+    class State(BaseModel):
+        model_config = {"extra": "allow"}
         episode_id: str = ""
         step_count: int = 0
 
-
-@dataclass
 class NumberSortAction(Action):
-    """Agent submits a sorted list of integers."""
-    values: list = field(default_factory=list)
+    model_config = {"extra": "allow"}
+    values: List[int] = []
     task: str = "easy"
 
-
-@dataclass
 class NumberSortObservation(Observation):
-    """What the environment shows the agent."""
+    model_config = {"extra": "allow"}
     task: str = "easy"
     description: str = ""
-    numbers: list = field(default_factory=list)
+    numbers: List[int] = []
     n: int = 0
     step: int = 0
     done: bool = False
@@ -41,10 +36,8 @@ class NumberSortObservation(Observation):
     instruction: str = ""
     reward: float = 0.0
 
-
-@dataclass
 class NumberSortState(State):
-    """Episode metadata."""
+    model_config = {"extra": "allow"}
     episode_id: str = ""
     step_count: int = 0
     task: str = "easy"

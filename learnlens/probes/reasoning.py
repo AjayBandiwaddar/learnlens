@@ -70,7 +70,7 @@ class ReasoningProbe(BaseProbe):
     def __init__(self, adapter, config, judge_model: str, judge_api_key: str | None = None) -> None:
         super().__init__(adapter, config)
         self.judge_model = judge_model
-        self.judge_api_key = judge_api_key or os.environ.get("ANTHROPIC_API_KEY")
+        self.judge_api_key = judge_api_key or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY")
 
     def evaluate(
         self,
@@ -105,7 +105,7 @@ class ReasoningProbe(BaseProbe):
 
     def _call_judge_api(self, prompt: str) -> str | None:
         # Auto-detect provider from model name
-        if "gpt" in self.judge_model or "o1" in self.judge_model or "o3" in self.judge_model:
+        if "gpt" in self.judge_model or "o1" in self.judge_model or "o3" in self.judge_model or "llama" in self.judge_model or "mixtral" in self.judge_model or "gemma" in self.judge_model:
             return self._call_openai(prompt)
         return self._call_anthropic(prompt)
 
@@ -133,7 +133,15 @@ class ReasoningProbe(BaseProbe):
     def _call_openai(self, prompt: str) -> str | None:
         try:
             import openai
-            client = openai.OpenAI(api_key=self.judge_api_key)
+            import os
+            # Groq uses OpenAI-compatible API
+            if "llama" in self.judge_model or "mixtral" in self.judge_model or "gemma" in self.judge_model:
+                client = openai.OpenAI(
+                    api_key=self.judge_api_key,
+                    base_url="https://api.groq.com/openai/v1"
+                )
+            else:
+                client = openai.OpenAI(api_key=self.judge_api_key)
         except Exception:
             return None
         for attempt in range(MAX_RETRIES + 1):

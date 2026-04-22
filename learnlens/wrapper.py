@@ -63,7 +63,7 @@ class LensWrapper:
         self._adapter    = adapter
         self.config      = config or LensConfig()
         self.judge_model = judge_model
-        self.judge_api_key = judge_api_key or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        self.judge_api_key = judge_api_key or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY") or os.environ.get("GROQ_API_KEY")
         self.config.validate()
 
     # ── Main entry point ───────────────────────────────────────────────

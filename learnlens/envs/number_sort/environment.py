@@ -185,7 +185,7 @@ class NumberSortEnvironment:
             "last_reward": s.last_reward,
             "instruction": (
                 'Submit your answer as: {"values": [n1, n2, ...]} '
-                f'with exactly {len(s.numbers)} integers.''
+                f'with exactly {len(s.numbers)} integers.'
             ),
         }
 

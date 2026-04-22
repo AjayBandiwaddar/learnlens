@@ -104,11 +104,16 @@ class ReasoningProbe(BaseProbe):
         return self._parse_judge_response(raw) if raw else None
 
     def _call_judge_api(self, prompt: str) -> str | None:
+        # Auto-detect provider from model name
+        if "gpt" in self.judge_model or "o1" in self.judge_model or "o3" in self.judge_model:
+            return self._call_openai(prompt)
+        return self._call_anthropic(prompt)
+
+    def _call_anthropic(self, prompt: str) -> str | None:
         try:
             import anthropic
         except ImportError:
             return None
-
         client = anthropic.Anthropic(api_key=self.judge_api_key)
         for attempt in range(MAX_RETRIES + 1):
             try:
@@ -118,12 +123,31 @@ class ReasoningProbe(BaseProbe):
                     messages=[{"role": "user", "content": prompt}],
                 )
                 return msg.content[0].text
-            except anthropic.RateLimitError:
+            except Exception:
                 if attempt < MAX_RETRIES:
                     time.sleep(RETRY_DELAY_S * (attempt + 1))
                     continue
                 return None
+        return None
+
+    def _call_openai(self, prompt: str) -> str | None:
+        try:
+            import openai
+            client = openai.OpenAI(api_key=self.judge_api_key)
+        except Exception:
+            return None
+        for attempt in range(MAX_RETRIES + 1):
+            try:
+                resp = client.chat.completions.create(
+                    model=self.judge_model,
+                    max_tokens=256,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                return resp.choices[0].message.content
             except Exception:
+                if attempt < MAX_RETRIES:
+                    time.sleep(RETRY_DELAY_S * (attempt + 1))
+                    continue
                 return None
         return None
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "learnlens"
-version = "0.1.0"
+version = "0.1.2"
 description = "Universal evaluation layer for OpenEnv agentic RL environments. Measures WHAT an agent learned, not just HOW MUCH reward it got."
 readme = "README.md"
 requires-python = ">=3.10"

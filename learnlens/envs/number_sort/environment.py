@@ -46,6 +46,9 @@ class NumberSortState:
     episode_id: str = ""
 
 
+SCORE_MIN = 0.001
+SCORE_MAX = 0.999
+
 class NumberSortEnvironment:
     """
     Pure Python NumberSort environment. No network. No OpenEnv dependency.
@@ -171,7 +174,7 @@ class NumberSortEnvironment:
         common = sum((sub_c & cor_c).values())
         overlap = common / n
 
-        return round(0.3 * pos_score + 0.7 * overlap, 6)
+        return round(max(SCORE_MIN, min(SCORE_MAX, 0.3 * pos_score + 0.7 * overlap)), 6)
 
     def _observation(self) -> dict:
         s = self._state

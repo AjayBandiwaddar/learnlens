@@ -22,6 +22,7 @@ except ImportError:
 class NumberSortAction(Action):
     model_config = {"extra": "allow"}
     values: List[int] = []
+    original: List[int] = [] 
     task: str = "easy"
 
 class NumberSortObservation(Observation):

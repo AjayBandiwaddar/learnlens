@@ -97,6 +97,31 @@ def random_agent(obs_str: str) -> str:
     return json.dumps({"values": numbers})
 
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Parsing helper
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _parse_obs_robust(obs_str: str) -> dict:
+    """
+    Robustly extract JSON from an observation string.
+    Handles raw JSON and all 5 ConsistencyProbe paraphrase templates.
+    """
+    import re
+    obs_str = obs_str.strip()
+    # Try direct parse first
+    try:
+        return json.loads(obs_str)
+    except json.JSONDecodeError:
+        pass
+    # Extract first JSON object found anywhere in the string
+    match = re.search(r'\{.*\}', obs_str, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+    return {}
 # ─────────────────────────────────────────────────────────────────────────────
 # Demo runner
 # ─────────────────────────────────────────────────────────────────────────────
@@ -124,7 +149,6 @@ def run_demo(task: str = "easy", n_episodes: int = 5) -> None:
 
     _summary(reports)
     _probe_explanation()
-    _pitch()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -188,60 +212,6 @@ def _probe_explanation() -> None:
     print()
 
 
-def _pitch() -> None:
-    print("=" * 62)
-    print("  The Pitch")
-    print("=" * 62)
-    print()
-    print("  Every team here measured REWARD.")
-    print("  I measured LEARNING.")
-    print()
-    print("  The random agent scored 0.75 reward.")
-    print("  The hacking agent scored 0.70 reward.")
-    print("  Reward says: random > hacker.")
-    print("  LQS says:    hacker > random (hacker is at least consistent).")
-    print("  Both are wrong, but reward can't even rank them correctly.")
-    print()
-    print("  On Queue Doctor (true multi-step RL env from Round 1):")
-    print("    An agent gaming the triage grader: reward=0.73.")
-    print("    LearnLens: LQS=0.27. Verdict: reward hacking.")
-    print()
-    print("  pip install learnlens")
-    print("  Three lines. Any OpenEnv environment.")
-    print("=" * 62)
-    print()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Observation parsing
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _parse_obs_robust(obs_str: str) -> dict:
-    """
-    Robust parser: handles raw JSON and all 5 ConsistencyProbe templates.
-    Extracts the embedded JSON dict from any wrapping text.
-    """
-    if isinstance(obs_str, dict):
-        return obs_str
-
-    s = obs_str.strip()
-
-    if s.startswith("{"):
-        try:
-            return json.loads(s)
-        except (ValueError, TypeError):
-            pass
-
-    # Extract JSON object embedded in paraphrase text
-    start = s.find("{")
-    end   = s.rfind("}") + 1
-    if start >= 0 and end > start:
-        try:
-            return json.loads(s[start:end])
-        except (ValueError, TypeError):
-            pass
-
-    return {}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -250,6 +220,6 @@ def _parse_obs_robust(obs_str: str) -> dict:
 
 if __name__ == "__main__":
     import sys
-    task = sys.argv[1] if len(sys.argv) > 1 else "easy"
-    n_ep = int(sys.argv[2]) if len(sys.argv) > 2 else 5
-    run_demo(task=task, n_episodes=n_ep)
+    task       = sys.argv[1] if len(sys.argv) > 1 else "easy"
+    n_episodes = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+    run_demo(task=task, n_episodes=n_episodes)

@@ -41,7 +41,7 @@ class LensWrapper:
 
     Accepts either:
       env_url: str  -> OpenEnvAdapter (WebSocket to remote HF Space)
-      adapter: Any  -> provided adapter (DirectAdapter for local envs)
+      adapter: Any  -> DirectAdapter for local environments
 
     One of env_url or adapter must be provided; not both.
     """
@@ -51,7 +51,7 @@ class LensWrapper:
         env_url: str | None = None,
         adapter=None,
         config: LensConfig | None = None,
-        judge_model: str = "claude-sonnet-4-6",
+        judge_model: str = "claude-sonnet-4-20250514",   # FIXED: was claude-sonnet-4-6
         judge_api_key: str | None = None,
     ) -> None:
         if env_url is None and adapter is None:
@@ -59,11 +59,16 @@ class LensWrapper:
         if env_url is not None and adapter is not None:
             raise ValueError("Provide env_url OR adapter, not both.")
 
-        self.env_url     = env_url or getattr(adapter, "env_url", "local://direct")
-        self._adapter    = adapter
-        self.config      = config or LensConfig()
-        self.judge_model = judge_model
-        self.judge_api_key = judge_api_key or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY") or os.environ.get("GROQ_API_KEY")
+        self.env_url      = env_url or getattr(adapter, "env_url", "local://direct")
+        self._adapter     = adapter
+        self.config       = config or LensConfig()
+        self.judge_model  = judge_model
+        self.judge_api_key = (
+            judge_api_key
+            or os.environ.get("ANTHROPIC_API_KEY")
+            or os.environ.get("GROQ_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+        )
         self.config.validate()
 
     # ── Main entry point ───────────────────────────────────────────────
@@ -96,9 +101,10 @@ class LensWrapper:
         # ── Generalization ────────────────────────────────────────────
         if self.config.run_generalization:
             from learnlens.probes.generalization import GeneralizationProbe
-            scores["generalization"] = GeneralizationProbe(
-                adapter, self.config
-            ).evaluate(agent_fn, n_episodes)
+            probe = GeneralizationProbe(adapter, self.config)
+            scores["generalization"] = probe.evaluate(agent_fn, n_episodes)
+            # Collect rewards as a side effect of generalization runs
+            all_rewards = probe.last_base_rewards
         else:
             scores["generalization"] = 0.5
 
@@ -114,10 +120,11 @@ class LensWrapper:
         # ── Hack Detection ────────────────────────────────────────────
         if self.config.run_hack_detection:
             from learnlens.probes.hack_detection import HackDetectionProbe
-            scores["hack_index"] = HackDetectionProbe(
-                adapter, self.config
-            ).evaluate(agent_fn, n_episodes)
-            all_rewards = _collect_rewards(adapter, agent_fn, n_episodes)
+            hack_probe = HackDetectionProbe(adapter, self.config)
+            scores["hack_index"] = hack_probe.evaluate(agent_fn, n_episodes)
+            # Use hack probe rewards if generalization didn't run
+            if not all_rewards:
+                all_rewards = hack_probe.last_rewards
         else:
             scores["hack_index"] = 0.0
 
@@ -125,13 +132,15 @@ class LensWrapper:
         if self.config.run_reasoning:
             from learnlens.probes.reasoning import ReasoningProbe
             scores["reasoning"] = ReasoningProbe(
-                adapter, self.config,
+                adapter,
+                self.config,
                 judge_model=self.judge_model,
                 judge_api_key=self.judge_api_key,
             ).evaluate(agent_fn, n_episodes)
         else:
             scores["reasoning"] = 0.5
 
+        # ── Fallback reward collection if no probe ran episodes ────────
         if not all_rewards:
             all_rewards = _collect_rewards(adapter, agent_fn, n_episodes)
 
@@ -165,23 +174,35 @@ class LensWrapper:
 
         import importlib
         specs = {
-            "generalization": ("learnlens.probes.generalization", "GeneralizationProbe", {}),
-            "consistency":    ("learnlens.probes.consistency",     "ConsistencyProbe",    {}),
-            "hack_detection": ("learnlens.probes.hack_detection",  "HackDetectionProbe",  {}),
-            "reasoning":      ("learnlens.probes.reasoning",       "ReasoningProbe",
-                               {"judge_model": self.judge_model,
-                                "judge_api_key": self.judge_api_key}),
+            "generalization": (
+                "learnlens.probes.generalization", "GeneralizationProbe", {}
+            ),
+            "consistency": (
+                "learnlens.probes.consistency", "ConsistencyProbe", {}
+            ),
+            "hack_detection": (
+                "learnlens.probes.hack_detection", "HackDetectionProbe", {}
+            ),
+            "reasoning": (
+                "learnlens.probes.reasoning", "ReasoningProbe",
+                {"judge_model": self.judge_model,
+                 "judge_api_key": self.judge_api_key}
+            ),
         }
         mod_path, cls_name, kwargs = specs[probe_name]
         ProbeClass = getattr(importlib.import_module(mod_path), cls_name)
-        return ProbeClass(self._get_adapter(), self.config, **kwargs).evaluate(
+        adapter = self._get_adapter()
+        if not adapter.health_check():
+            raise EnvironmentUnavailableError(
+                f"Environment at {self.env_url} failed health check."
+            )
+        return ProbeClass(adapter, self.config, **kwargs).evaluate(
             agent_fn, n_episodes
         )
 
     # ── Internal ───────────────────────────────────────────────────────
 
     def _get_adapter(self):
-        """Return existing adapter or build OpenEnvAdapter from env_url."""
         if self._adapter is not None:
             return self._adapter
         from learnlens.adapters.openenv import OpenEnvAdapter
@@ -191,10 +212,10 @@ class LensWrapper:
         )
 
 
-# ── Module helpers ────────────────────────────────────────────────────────────
+# ── Module helpers ─────────────────────────────────────────────────────────
 
 def _collect_rewards(adapter, agent_fn: Callable, n_episodes: int) -> list[float]:
-    """Run n episodes, return list of total rewards. For mean/std reporting."""
+    """Run n episodes, return list of total rewards."""
     from learnlens.probes.base import _parse_action
     rewards = []
     for i in range(n_episodes):
@@ -215,7 +236,6 @@ def _collect_rewards(adapter, agent_fn: Callable, n_episodes: int) -> list[float
 
 
 def _std(values: list[float]) -> float:
-    """Population standard deviation."""
     n = len(values)
     if n < 2:
         return 0.0

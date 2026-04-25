@@ -1,5 +1,5 @@
 """
-learnlens -- Universal evaluation layer for OpenEnv agentic RL environments.
+learnlens — Universal evaluation layer for OpenEnv agentic RL environments.
 
 Measures WHAT an agent learned, not just HOW MUCH reward it accumulated.
 
@@ -11,7 +11,14 @@ Quick start:
     results.print_report()
     print(results.lqs)   # Learning Quality Score in [0.0, 1.0]
 
-pip install learnlens
+As a native OpenEnv Rubric (training-time reward signal):
+    from learnlens.rubric import LearningQualityRubric
+
+    class MyEnv(Environment):
+        def __init__(self):
+            super().__init__(rubric=LearningQualityRubric())
+
+pip install learnlens-rl
 """
 
 from learnlens.config import LensConfig
@@ -26,5 +33,5 @@ __all__ = [
     "make_report",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.1.3"
 __author__ = "Ajay Bandiwaddar"

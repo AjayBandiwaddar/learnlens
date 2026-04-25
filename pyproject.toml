@@ -4,30 +4,66 @@ build-backend = "hatchling.build"
 
 [project]
 name = "learnlens-rl"
-version = "0.1.3"
-description = "Universal evaluation layer for OpenEnv agentic RL environments. Measures WHAT an agent learned, not just HOW MUCH reward it got."
+version = "0.1.4"
+description = "Learning Quality Score (LQS) evaluation for OpenEnv agentic RL environments"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
-keywords = ["rl", "llm", "openenv", "evaluation", "agents", "grpo", "learning-quality", "reward-hacking", "reinforcement-learning"]
-authors = [{ name = "Ajay Bandiwaddar", email = "ajaybandiwaddar1@gmail.com" }]
+license = {text = "MIT"}
+keywords = [
+    "reinforcement-learning",
+    "llm",
+    "openenv",
+    "evaluation",
+    "agents",
+    "reward-hacking",
+    "grpo",
+    "rl-evaluation",
+    "lqs",
+    "learning-quality",
+]
+authors = [
+    {name = "Ajay Bandiwaddar", email = "ajaybandiwaddar1@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
 dependencies = [
     "openenv-core>=0.2.3",
-    "anthropic>=0.25.0",
-    "rich>=13.0.0",
     "httpx>=0.27.0",
-    "numpy>=1.24.0",
-    "fastapi>=0.104.0",
-    "uvicorn>=0.24.0",
     "pydantic>=2.0.0",
+    "rich>=13.0.0",
+    "numpy>=1.24.0",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "pytest-asyncio", "black", "ruff"]
+reasoning = [
+    "anthropic>=0.25.0",
+    "openai>=1.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "twine>=4.0.0",
+    "build>=0.10.0",
+]
 
 [project.urls]
+Homepage = "https://github.com/AjayBandiwaddar/learnlens"
 Repository = "https://github.com/AjayBandiwaddar/learnlens"
-PyPI = "https://pypi.org/project/learnlens-rl/"
+"Bug Tracker" = "https://github.com/AjayBandiwaddar/learnlens/issues"
+"HF Space" = "https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort"
 
 [tool.hatch.build.targets.wheel]
 packages = ["learnlens"]

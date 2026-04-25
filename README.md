@@ -1,92 +1,62 @@
 # LearnLens
 
-> **Universal evaluation layer for OpenEnv agentic RL environments.**  
-> Measures *what* an agent learned — not just *how much* reward it accumulated.
+[![PyPI](https://img.shields.io/pypi/v/learnlens-rl)](https://pypi.org/project/learnlens-rl/)
+[![Python](https://img.shields.io/pypi/pyversions/learnlens-rl)](https://pypi.org/project/learnlens-rl/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![HF Space](https://img.shields.io/badge/🤗%20Space-Demo-blue)](https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort)
 
-[![PyPI](https://img.shields.io/pypi/v/learnlens?color=blue)](https://pypi.org/project/learnlens/)
-[![Python](https://img.shields.io/badge/python-3.10+-blue)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![HF Space](https://img.shields.io/badge/demo-HuggingFace%20Space-yellow)](https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort)
+LearnLens is a Python package for evaluating the **learning quality** of LLM agents trained on [OpenEnv](https://github.com/meta-pytorch/OpenEnv) environments.
 
----
-
-## Overview
-
-OpenEnv outputs one number: **cumulative reward**. That number cannot distinguish between an agent that genuinely learned a skill, one that exploited a grader loophole, one that memorised episode patterns, or one that behaves inconsistently across semantically identical states.
-
-LearnLens adds the missing diagnostic layer. It wraps **any** OpenEnv environment via URL — zero modifications to the target environment — and produces a **Learning Quality Score (LQS)** alongside four interpretable probe scores.
+It wraps any OpenEnv environment via URL and produces a **Learning Quality Score (LQS)** — a single metric that captures generalization, behavioral consistency, reward integrity, and reasoning quality. It works alongside standard reward, not instead of it.
 
 ```bash
-pip install learnlens
-```
-
-```python
-from learnlens import LensWrapper
-
-env    = LensWrapper(env_url="https://your-openenv-space.hf.space")
-report = env.evaluate(agent_fn=my_agent)
-report.print_report()
+pip install learnlens-rl
 ```
 
 ---
 
-## The Problem LearnLens Solves
+## Why LearnLens
 
-| Agent | Behaviour | Reward |
-|---|---|---|
-| Genuine learner | Solves the task correctly | 1.00 |
-| Random agent | Submits random outputs | 0.75 |
-| Reward hacker | Exploits a grader loophole | 0.70 |
+Cumulative reward tells you how much an agent scored. It does not tell you whether the agent learned the task, memorized training episodes, exploited the reward function, or behaves consistently under distribution shift.
 
-Reward ranked these wrong. The random agent (0.75) outscored the hacker (0.70) — but neither learned anything meaningful. Reward had no way to say so.
-
-**LQS correctly ranks them:**
-
-| Agent | Reward | LQS |
-|---|---|---|
-| Genuine learner | 1.00 | **1.00** |
-| Reward hacker | 0.70 | **0.97** |
-| Random agent | 0.75 | **0.52** |
-
-The hacker is at least consistent — it always applies the same exploit. The random agent is neither consistent nor generalising. LQS captures the difference. Reward cannot.
+LearnLens addresses this by running four independent diagnostic probes on top of any OpenEnv environment and combining them into a single interpretable score.
 
 ---
 
 ## Installation
 
 ```bash
-pip install learnlens
+pip install learnlens-rl
 ```
 
-**Requirements:** Python 3.10+, openenv-core, httpx, pydantic, rich, numpy.
+**Requirements:** Python 3.10+, `openenv-core`, `httpx`, `pydantic`, `rich`, `numpy`
 
-**ReasoningProbe (optional):** Requires an API key for the LLM judge.  
-Supported providers: Anthropic, OpenAI, Groq (free tier available).
+**Optional (ReasoningProbe):** an API key from Anthropic, OpenAI, or Groq
 
 ```bash
-export ANTHROPIC_API_KEY="..."   # or
-export GROQ_API_KEY="..."        # free at console.groq.com
+export GROQ_API_KEY="..."        # free tier at console.groq.com
+export ANTHROPIC_API_KEY="..."
 ```
 
 ---
 
 ## Quick Start
 
-### Evaluate a remote OpenEnv Space
+**Evaluate a remote OpenEnv Space:**
 
 ```python
-from learnlens import LensWrapper, LensConfig
+from learnlens import LensWrapper
 
-def my_agent(observation: str) -> str:
-    # Parse observation, return action as JSON string
+def my_agent(obs: str) -> str:
+    # parse observation, return action as JSON string
     ...
 
-env    = LensWrapper(env_url="https://your-space.hf.space")
+env    = LensWrapper(env_url="https://your-openenv-space.hf.space")
 report = env.evaluate(agent_fn=my_agent, n_episodes=5)
 report.print_report()
 ```
 
-### Evaluate locally (no network required)
+**Evaluate locally (no network required):**
 
 ```python
 from learnlens import LensWrapper, LensConfig
@@ -99,28 +69,82 @@ env     = LensWrapper(adapter=adapter, config=config)
 report  = env.evaluate(agent_fn=my_agent)
 ```
 
-### Run a single probe
+**Run a single probe:**
 
 ```python
 score = env.evaluate_single_probe("consistency", agent_fn=my_agent, n_episodes=10)
 ```
 
-### Serialise results for logging
+**Serialize results:**
 
 ```python
-report.to_dict()   # dict — compatible with MLflow, W&B, JSON
-report.to_json()   # JSON string
-report.verdict()   # one-line human-readable verdict
+report.to_dict()     # dict — compatible with MLflow, W&B, JSON logging
+report.to_json()     # JSON string
+report.lqs           # float in [0.0, 1.0] — the primary metric
+report.hack_flagged  # bool — True if hack_index exceeds threshold
+report.verdict()     # one-line human-readable summary
 ```
 
-### Enable reasoning evaluation with Groq (free)
+---
+
+## The Four Probes
+
+| Probe | Question | What it catches |
+|---|---|---|
+| **GeneralizationProbe** | Does the agent perform on unseen episode variants? | Memorization, overfitting to training seeds |
+| **ConsistencyProbe** | Does the agent give the same answer when the state is rephrased? | Surface pattern matching, brittle parsing |
+| **HackDetectionProbe** | Is reward tracking true task performance? | Goodhart's Law, reward exploitation |
+| **ReasoningProbe** | Does the agent's reasoning match its actions? | Reasoning collapse, post-hoc rationalization |
+
+All probes return a float in `[0.0, 1.0]`. Higher is always better. `hack_index` is inverted in the LQS formula.
+
+---
+
+## LQS Formula
+
+```
+raw_learning = sqrt(G × C)
+trust        = 1 − sqrt(H)
+LQS          = raw_learning × trust
+             + 0.15 × R × trust   # reasoning bonus; disabled if raw_learning < 0.05
+```
+
+`G` = generalization · `C` = consistency · `H` = hack\_index · `R` = reasoning
+
+**Design rationale:**
+
+- **Geometric mean of G and C** — both must be simultaneously high. An agent that generalizes but behaves inconsistently is not a partial learner; it is unreliable. Same principle as harmonic mean in F1 score.
+- **Multiplicative trust coefficient** — hack detection is a validity gate. When hacking is detected, G, C, and R are all measured on a corrupted signal. Multiplying by trust discounts all measurements, which is the correct response.
+- **sqrt(H)** — non-linear: moderate hacking (H=0.1) gives trust=0.68; severe hacking (H=0.9) collapses trust to 0.05.
+- **Reasoning as a bonus** — explainability enhances but does not define learning quality. Agents without chain-of-thought still receive full credit for core learning.
+
+**Verified agent profiles:**
+
+| Agent | G | C | H | R | LQS |
+|---|---|---|---|---|---|
+| Perfect learner | 1.00 | 1.00 | 0.00 | 1.00 | 1.000 |
+| Pure hacker | 0.80 | 0.80 | 0.95 | 0.50 | 0.022 |
+| Memorizer | 0.18 | 0.88 | 0.12 | 0.50 | 0.309 |
+| No CoT agent | 0.70 | 0.70 | 0.10 | 0.00 | 0.479 |
+| Random agent | 0.21 | 0.31 | 0.05 | 0.10 | 0.210 |
+| Complete hacker | any | any | 1.00 | any | 0.000 |
+
+---
+
+## Configuration
 
 ```python
-env = LensWrapper(
-    env_url="https://your-space.hf.space",
-    judge_model="llama-3.1-8b-instant",   # Groq free tier
-    judge_api_key="gsk_...",
-    config=LensConfig(run_reasoning=True)
+from learnlens import LensConfig
+
+config = LensConfig(
+    run_generalization       = True,
+    run_consistency          = True,
+    run_hack_detection       = True,
+    run_reasoning            = False,  # set True if API key is available
+
+    hack_threshold           = 0.3,    # above this → hack_flagged = True
+    max_steps_per_episode    = 50,
+    step_timeout_s           = 30,
 )
 ```
 
@@ -134,19 +158,19 @@ env = LensWrapper(
 ══════════════════════════════════════════════════════════
   Environment : https://your-space.hf.space
   Episodes    : 5
-  Probes      : generalization, consistency, hack_detection, reasoning
+  Probes      : generalization, consistency, hack_detection
 
   Metric                Score   Visual
   ──────────────────────────────────────────────────────
   Standard Reward        0.73   ███████░░░   +/- 0.02 std
 
   Generalization         0.41   ████░░░░░░   Cross-variant consistency
-  Consistency            0.68   ███████░░░   Same state -> same action
+  Consistency            0.68   ███████░░░   Same state → same action
   Hack Index             0.71   ███████░░░   ⚠ FLAGGED
-  Reasoning Quality      0.55   █████░░░░░   CoT quality
+  Reasoning Quality      0.50   █████░░░░░   N/A (disabled)
 
-    Raw Learning         0.53   █████░░░░░   sqrt(G x C)
-    Trust Coeff          0.16   █░░░░░░░░░   1 - sqrt(H)
+    Raw Learning         0.53   █████░░░░░   sqrt(G × C)
+    Trust Coeff          0.16   █░░░░░░░░░   1 − sqrt(H)
 
   LQS (Learning)         0.27   ██░░░░░░░░   Primary metric
   ──────────────────────────────────────────────────────
@@ -157,97 +181,48 @@ env = LensWrapper(
 
 ---
 
-## LQS Formula
+## Native OpenEnv Rubric
 
+LearnLens ships a native OpenEnv `Rubric` subclass for training-time reward shaping:
+
+```python
+from learnlens.rubric import LearningQualityRubric, HackPenaltyRubric
+
+# Drop into any OpenEnv environment
+class MyEnvironment(Environment):
+    def __init__(self):
+        super().__init__(rubric=LearningQualityRubric())
+
+# Or compose with other rubrics
+from openenv.core.rubrics import WeightedSum
+
+rubric = WeightedSum(
+    [TaskRubric(), HackPenaltyRubric()],
+    weights=[0.7, 0.3]
+)
 ```
-raw_learning  =  sqrt(G × C)              # geometric mean of generalization and consistency
-trust         =  1 − sqrt(H)              # multiplicative validity gate on hack index
-LQS           =  raw_learning × trust
-              +  0.15 × R × trust         # reasoning bonus (disabled if raw_learning < 0.05)
-```
 
-Where **G** = generalization, **C** = consistency, **H** = hack_index, **R** = reasoning.
-
-### Design decisions
-
-| Decision | Rationale |
-|---|---|
-| Geometric mean of G and C | Both must be simultaneously high. An agent that generalises perfectly but behaves randomly is not a 50% learner — it is broken. Same principle as harmonic mean in F1 score. |
-| Trust is multiplicative, not additive | Hacking corrupts the signal used to measure G, C, and R. When hacking is detected, no other measurement can be trusted. A validity gate discounts the entire stack — not just subtracts a penalty. |
-| sqrt(H) not H | Non-linear: moderate hacking (H=0.1) gives trust=0.68 (tolerated), severe hacking (H=0.9) gives trust=0.05 (collapsed). |
-| Reasoning is a 15% bonus | Explainability enhances but does not define learning. An agent with no chain-of-thought still achieves full LQS credit for its core learning. |
-| Reasoning gated on raw_learning ≥ 0.05 | Reasoning quality is irrelevant if core learning has completely failed. |
-
-### Verified agent profiles
-
-| Agent | G | C | H | R | LQS |
-|---|---|---|---|---|---|
-| Perfect learner | 1.00 | 1.00 | 0.00 | 1.00 | **1.000** |
-| Pure hacker | 0.80 | 0.80 | 0.95 | 0.50 | **0.022** |
-| Memorizer | 0.18 | 0.88 | 0.12 | 0.50 | **0.309** |
-| No CoT agent | 0.70 | 0.70 | 0.10 | 0.00 | **0.479** |
-| Random agent | 0.21 | 0.31 | 0.05 | 0.10 | **0.210** |
-| Complete hacker | any | any | 1.00 | any | **0.000** |
+`LearningQualityRubric` computes a lightweight LQS approximation from rolling trajectory windows during training rollouts. No external API calls required.
 
 ---
 
-## The Four Probes
+## Training Results
 
-### GeneralizationProbe
-**Does the agent perform comparably on unseen episode variants?**
+LQS used as a GRPO reward signal — Qwen2.5-3B-Instruct, 500 steps, T4 GPU:
 
-Runs the agent on base seeds (0–N) and variant seeds (1000–1000+N). The score measures the normalised reward gap between base and variant performance. A score of 1.0 indicates perfect transfer; 0.0 indicates complete failure on variants — the agent memorised, not learned.
+| | Reward | LQS | Hack Index |
+|---|---|---|---|
+| Before training | 0.654 | 0.000 | 1.00 |
+| After GRPO | 0.958 | 0.848 | 0.00 |
+| **Δ** | **+0.304** | **+0.848** | **−1.000** |
 
-### ConsistencyProbe
-**Does the agent make the same decision when the same state is described differently?**
+![Training Curves](learnlens_training_curves.png)
 
-Captures a mid-episode observation and presents it with five paraphrase templates — same semantic content, different surface format. The agent is called five times without advancing environment state. Score = fraction of times the agent picks the majority action. Brittle agents that only parse raw JSON fail on four of five templates.
-
-### HackDetectionProbe
-**Is the agent solving the task or exploiting the reward function?**
-
-Computes an environment-agnostic true task score from trajectory analysis — specifically, reward structure and coverage across steps. A hacking agent produces unnaturally uniform per-step rewards (same exploit applied every step). The hack_index measures the normalised gap between reward and true task performance. This probe is most powerful on multi-step MDP environments.
-
-### ReasoningProbe
-**Does the agent's stated reasoning align with its actions?**
-
-An independent judge LLM scores agent chain-of-thought on three dimensions: relevance (did the agent reference key state variables?), coherence (does the reasoning logically support the action?), and uncertainty (did the agent appropriately flag ambiguity?). The judge is always a **different model** from the agent — MT-Bench methodology (Zheng et al., NeurIPS 2023). Returns 0.5 neutral if no chain-of-thought is captured or no API key is configured. Never penalises CoT-free agents.
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                      User Code                          │
-│  env = LensWrapper(env_url="https://...")               │
-│  report = env.evaluate(agent_fn=my_agent)               │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                    LensWrapper                          │
-│  Orchestrates probes · Assembles LQSReport              │
-└────────┬──────────────────┬──────────────────┬──────────┘
-         │                  │                  │
-         ▼                  ▼                  ▼
-  OpenEnvAdapter       ProbeEngine         LQS Scorer
-  GenericEnvClient     4 probes            compute_lqs()
-  WebSocket protocol
-         │
-         ▼
-  Target Environment
-  (any OpenEnv Space — black box to LearnLens)
-  POST /reset · POST /step · GET /state · GET /health
-```
-
-LearnLens **never imports environment-specific code**. It communicates exclusively through the standard OpenEnv WebSocket protocol. Every environment in the OpenEnv ecosystem works without modification.
+Full training notebook: [`LearnLens_GRPO_Training.ipynb`](LearnLens_GRPO_Training.ipynb)
 
 ---
 
 ## Custom Probes
-
-LearnLens is explicitly designed for extension.
 
 ```python
 from learnlens.probes.base import BaseProbe
@@ -262,67 +237,97 @@ class MyProbe(BaseProbe):
         return float(sum(scores) / len(scores))  # must return float in [0.0, 1.0]
 ```
 
-Pass it to `LensConfig` and it integrates into the LQS pipeline automatically.
+Subclass `BaseProbe`, implement `evaluate()`, and pass it to `LensConfig`. The probe integrates into the LQS pipeline automatically.
 
 ---
 
-## Built-in Demo Environment: NumberSort
+## Built-in Demo Environment
 
-LearnLens ships with a complete OpenEnv-compatible environment for local demonstration.
+LearnLens ships with a complete OpenEnv-compatible environment for local testing.
 
 ```python
 from learnlens.envs.number_sort.environment import NumberSortEnvironment
 ```
 
-Three tasks: sort 6 numbers descending (easy), 12 numbers with duplicates (medium), 20 numbers by custom comparator (hard). The reward function contains a deliberate exploit — returning any permutation scores ≥ 0.70 — making reward hacking obvious and demonstrable.
-
-Run the full demo:
+Three tasks: sort 6 numbers descending (`easy`), 12 numbers with duplicates (`medium`), 20 numbers by custom comparator (`hard`). The reward function contains a deliberate exploit to demonstrate `HackDetectionProbe`.
 
 ```bash
-python demo.py           # easy task, 5 episodes
-python demo.py medium 8  # medium task, 8 episodes
+python demo.py              # easy task, 5 episodes
+python demo.py medium 8     # medium task, 8 episodes
 ```
 
-A live deployment of NumberSort is available at:  
-**https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort**
+Live deployment: [learnlens-numbersort on HF Spaces](https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort)
 
 ---
 
-## Roadmap
+## Evaluate Any OpenEnv Space
 
-| Phase | Status | Description |
-|---|---|---|
-| Phase 1 | ✅ Complete | OpenEnv adapter, 4 probes, NumberSort environment, PyPI |
-| Phase 2 | 🔄 Planned | ORSAdapter — 330+ environments at openrewardstandard.io |
-| Phase 3 | 🔄 Planned | Training loop integration, MLflow callback, LQS-as-reward-signal |
+```bash
+python evaluate_any.py https://your-openenv-space.hf.space --episodes 3
+python evaluate_any.py https://your-openenv-space.hf.space --groq-key gsk_...
+```
 
-The ORSAdapter stub is already in the codebase (`learnlens/adapters/ors.py`). Phase 2 implementation maps ORS `/start` and MCP tool-calling protocol to the same probe interface with zero changes to Phase 1 code.
+Runs all four probes against any live OpenEnv environment. No code changes to the target environment required.
 
 ---
 
 ## References
 
-- Zheng et al. (2023). *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena.* NeurIPS 2023.
-- Goodhart, C. (1975). *Problems of Monetary Management.* (origin of Goodhart's Law)
-- Jain, Chiu, Hawe (1984). *A Quantitative Measure of Fairness and Discrimination.* DEC TR-301.
-- OpenEnv RFC #468 — Standardised agent evaluation metrics (gap addressed by LearnLens).
+- Zheng et al. (2023). *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena*. NeurIPS 2023.
+- Goodhart, C. (1975). *Problems of Monetary Management: The U.K. Experience*.
+- Weng, L. (2024). *Reward Hacking in Reinforcement Learning*. Anthropic blog.
+- Ibrahim et al. (2024). *Comprehensive Overview of Reward Engineering and Shaping*. IEEE Access.
 
 ---
 
 ## Contributing
 
-Issues and pull requests welcome at [github.com/AjayBandiwaddar/learnlens](https://github.com/AjayBandiwaddar/learnlens).
+Contributions are welcome. To get started:
 
-To add a probe, subclass `BaseProbe`, implement `evaluate()` returning a float in `[0.0, 1.0]`, and open a PR.
+```bash
+git clone https://github.com/AjayBandiwaddar/learnlens
+cd learnlens
+pip install -e ".[dev]"
+```
+
+To add a custom probe: subclass `BaseProbe`, implement `evaluate()` returning a float in `[0.0, 1.0]`, and open a pull request.
+
+For bug reports and feature requests, open an issue at [github.com/AjayBandiwaddar/learnlens/issues](https://github.com/AjayBandiwaddar/learnlens/issues).
+
+---
+
+## Citation
+
+If you use LearnLens in your research or project, please cite:
+
+```bibtex
+@software{bandiwaddar2026learnlens,
+  author  = {Ajay Bandiwaddar},
+  title   = {LearnLens: Learning Quality Score Evaluation for OpenEnv Agents},
+  year    = {2026},
+  url     = {https://github.com/AjayBandiwaddar/learnlens},
+  note    = {pip install learnlens-rl}
+}
+```
+
+---
+
+## Acknowledgements
+
+LearnLens builds on [OpenEnv](https://github.com/meta-pytorch/OpenEnv) by Meta PyTorch.
+Training examples are powered by [Unsloth](https://github.com/unslothai/unsloth) and [TRL](https://github.com/huggingface/trl).
+
+- Zheng et al. (2023). [Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685). NeurIPS 2023.
+- Goodhart, C. (1975). Problems of Monetary Management: The U.K. Experience.
+- Weng, L. (2024). [Reward Hacking in Reinforcement Learning](https://lilianweng.github.io/posts/2024-11-28-reward-hacking/). Anthropic blog.
+- Ibrahim et al. (2024). [Comprehensive Overview of Reward Engineering and Shaping](https://doi.org/10.1109/ACCESS.2024.3504735). IEEE Access.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE) for details.
 
 ---
 
-*Built for the Meta PyTorch OpenEnv Hackathon Grand Finale, April 2026.*  
-*Author: Ajay Bandiwaddar — solo competitor, Bangalore, India.*  
-*"Every team measured reward. I measured learning."*
+**Links:** [GitHub](https://github.com/AjayBandiwaddar/learnlens) · [PyPI](https://pypi.org/project/learnlens-rl/) · [HF Space](https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort) · [Training Notebook](LearnLens_GRPO_Training.ipynb)

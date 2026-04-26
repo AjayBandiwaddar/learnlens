@@ -18,6 +18,8 @@ tags:
 
 A live OpenEnv environment built into [LearnLens](https://github.com/AjayBandiwaddar/learnlens) — the universal evaluation layer for agentic RL environments.
 
+> 📖 **Judges & Reviewers:** Start with the **[Blog](https://github.com/AjayBandiwaddar/learnlens/blob/main/BLOG.md)** — it covers the full story, demo walkthrough, and training results.
+
 The agent receives a shuffled list of integers and must return them sorted. The reward function contains a deliberate exploitable loophole — making reward hacking obvious and demonstrable for LearnLens probe evaluation.
 
 ## Endpoints

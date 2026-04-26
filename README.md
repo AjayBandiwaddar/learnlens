@@ -7,7 +7,10 @@
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/AjayBandiwaddar/learnlens/blob/main/LearnLens_GRPO_Training.ipynb)
 [![Blog](https://img.shields.io/badge/Blog-Why%20Reward%20Is%20Not%20Learning-orange)](https://github.com/AjayBandiwaddar/learnlens/blob/main/BLOG.md)
 
+
 > *Built solo · Meta PyTorch OpenEnv Grand Finale · April 2026 · Bangalore, India*
+
+> 📖 *Judges & Reviewers:* Start with the **[Blog](https://github.com/AjayBandiwaddar/learnlens/blob/main/BLOG.md)** — it covers the full story, demo walkthrough, and training results.
 
 
 

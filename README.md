@@ -1,5 +1,12 @@
 # LearnLens: Why Reward Is Not Learning — Your Agent Is Lying to You
 
+[![PyPI](https://img.shields.io/pypi/v/learnlens-rl)](https://pypi.org/project/learnlens-rl/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://pypi.org/project/learnlens-rl/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![HF Space](https://img.shields.io/badge/🤗%20Space-Live%20Demo-blue)](https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/AjayBandiwaddar/learnlens/blob/main/LearnLens_GRPO_Training.ipynb)
+[![Blog](https://img.shields.io/badge/Blog-Why%20Reward%20Is%20Not%20Learning-orange)](https://github.com/AjayBandiwaddar/learnlens/blob/main/BLOG.md)
+
 > *Built solo · Meta PyTorch OpenEnv Grand Finale · April 2026 · Bangalore, India*
 
 

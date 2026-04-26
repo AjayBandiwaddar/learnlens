@@ -301,17 +301,27 @@ This is what infrastructure looks like. Not every environment is compatible on d
 
 This approach is not limited to NumberSort. LearnLens wraps **any** OpenEnv environment — zero changes required. The package ships three adapters: `OpenEnvAdapter` for standard OpenEnv spaces, `DirectAdapter` for local environments, and `MCPAdapter` for MCP-based environments — so it connects to any environment architecture without modifications.
 
-The architecture is designed to extend to ORS (Open Reward Standard) — 330+ environments. The adapter interface is in place. Implementation is Phase 2.
-
 Every team building RL environments faces the same problem: bad reward signals waste compute. Hacking agents waste training runs. LearnLens catches both in five episodes, three lines of code.
 
 ---
 
-## What Comes Next
+## Post Hackathon
 
-The hypothesis LearnLens makes is testable and falsifiable. Does LQS ranking correlate with human expert judgment of agent quality better than reward ranking does? That is the validation study. That is the paper. The framework is already designed to support it — every probe is independently measurable, every formula decision is documented and reversible.
+**Validation study.** The core hypothesis is testable: does LQS ranking correlate 
+with human expert judgment better than reward ranking? That's the paper. Every probe 
+is independently measurable, every formula decision is documented and reversible.
 
-If you are evaluating environments and want to run LearnLens against your own agent — the three-line quick start works on any OpenEnv Space right now. Open an issue or reach out directly. I genuinely want to know where LQS gets it wrong. That feedback, especially from researchers and engineers who build these systems, is exactly what shapes the next version.
+**LLM-as-judge reasoning probe.** ReasoningProbe currently returns 0.5 neutral when 
+no API key is present. The full implementation — a separate judge model scoring 
+relevance, coherence, and uncertainty — is designed and stubbed. Not completed in 
+the hackathon window.
+
+**ORS adapter.** Architecture extends to Open Reward Standard (330+ environments). 
+Interface is in place. Implementation is Phase 2.
+
+If you run LearnLens against your environment and find where LQS gets it wrong — 
+open an issue. That feedback, especially from researchers and engineers who build 
+these systems, is exactly what shapes the next version.
 
 ---
 

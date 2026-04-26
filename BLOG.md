@@ -12,7 +12,7 @@ Similarly — **an agent can show reward going up and yet not learn anything mea
 
 I'm Ajay. I built LearnLens for Theme 05 — the Wild Card. This is the story of a missing layer I discovered while building my Round 1 environment, and what I did about it.
 
-> **LearnLens is not an environment. It is what makes every environment meaningful.**
+> **LearnLens is not an environment. It is what makes every environment more meaningful.**
 
 ---
 
@@ -165,6 +165,17 @@ LQS          = raw_learning × trust + 0.15 × R × trust
 ## The Training Experiment — This Is Where It Gets Real
 
 > *"The real question is: did the agent actually improve — or did the reward just increase?"*
+
+## Results at a Glance
+
+| | Reward | LQS | Hack Index |
+|---|---|---|---|
+| Hacking Agent (before training) | 0.654 | 0.000 | 1.00 |
+| **Trained Model (after 500 steps)** | **0.958** | **0.848** | **0.00** |
+| **Delta** | **+46.5%** | **+∞ (zero → learning)** | **-1.00** |
+
+> Reward improved. LQS went from zero to 0.848. Hack index dropped to zero.  
+> Standard reward would have called this a minor gain. LQS reveals a complete behavioral shift.
 
 **Before training:** a hacking agent. Reward = 0.654. LQS = **0.000**. Hack Index = **1.00**. Purely exploiting the system.
 

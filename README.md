@@ -266,14 +266,6 @@ python evaluate_any.py https://your-openenv-space.hf.space --groq-key gsk_...
 
 Runs all four probes against any live OpenEnv environment. No code changes to the target environment required.
 
----
-
-## References
-
-- Zheng et al. (2023). *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena*. NeurIPS 2023.
-- Goodhart, C. (1975). *Problems of Monetary Management: The U.K. Experience*.
-- Weng, L. (2024). *Reward Hacking in Reinforcement Learning*. Anthropic blog.
-- Ibrahim et al. (2024). *Comprehensive Overview of Reward Engineering and Shaping*. IEEE Access.
 
 ---
 

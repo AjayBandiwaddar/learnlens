@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "learnlens-rl"
-version = "0.1.6"
-description = "Learning Quality Score (LQS) evaluation for OpenEnv agentic RL environments"
+version = "0.2.0"
+description = "Learning Quality Score (LQS) — behavioral evaluation for any RL environment"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -13,6 +13,9 @@ keywords = [
     "reinforcement-learning",
     "llm",
     "openenv",
+    "gymnasium",
+    "stable-baselines3",
+    "rllib",
     "evaluation",
     "agents",
     "reward-hacking",
@@ -20,6 +23,8 @@ keywords = [
     "rl-evaluation",
     "lqs",
     "learning-quality",
+    "behavioral-evaluation",
+    "reward-exploitation",
 ]
 authors = [
     {name = "Ajay Bandiwaddar", email = "ajaybandiwaddar1@gmail.com"}
@@ -37,6 +42,8 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+# Core dependencies — no RL framework required at install time.
+# Framework dependencies are optional so users only install what they need.
 dependencies = [
     "openenv-core>=0.2.3",
     "httpx>=0.27.0",
@@ -46,10 +53,52 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+
+# Gymnasium ecosystem — CartPole, LunarLander, Atari, MuJoCo, and all plugins
+gymnasium = [
+    "gymnasium>=0.26.0",
+]
+
+# Gymnasium with MuJoCo physics environments
+gymnasium-mujoco = [
+    "gymnasium>=0.26.0",
+    "gymnasium[mujoco]>=0.26.0",
+]
+
+# Gymnasium with Atari environments
+gymnasium-atari = [
+    "gymnasium>=0.26.0",
+    "gymnasium[atari]>=0.26.0",
+    "autorom[accept-rom-license]>=0.4.2",
+]
+
+# Stable Baselines3 — evaluate trained PPO, SAC, DQN, TD3, A2C, DDPG models
+sb3 = [
+    "stable-baselines3>=2.0.0",
+    "gymnasium>=0.26.0",
+]
+
+# Ray RLlib — evaluate trained distributed RL agents
+rllib = [
+    "ray[rllib]>=2.0.0",
+]
+
+# ReasoningProbe — LLM judge for CoT-action alignment scoring
 reasoning = [
     "anthropic>=0.25.0",
     "openai>=1.0.0",
 ]
+
+# Install everything — for researchers running the full validation study
+all = [
+    "gymnasium>=0.26.0",
+    "stable-baselines3>=2.0.0",
+    "ray[rllib]>=2.0.0",
+    "anthropic>=0.25.0",
+    "openai>=1.0.0",
+]
+
+# Development toolchain
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
@@ -57,6 +106,8 @@ dev = [
     "ruff>=0.1.0",
     "twine>=4.0.0",
     "build>=0.10.0",
+    "gymnasium>=0.26.0",
+    "stable-baselines3>=2.0.0",
 ]
 
 [project.urls]
@@ -67,3 +118,15 @@ Repository = "https://github.com/AjayBandiwaddar/learnlens"
 
 [tool.hatch.build.targets.wheel]
 packages = ["learnlens"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

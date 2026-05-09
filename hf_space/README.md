@@ -20,7 +20,7 @@ tags:
 
 A live OpenEnv environment built into [LearnLens](https://github.com/AjayBandiwaddar/learnlens) — the universal evaluation layer for agentic RL environments.
 
-**Blog:** [Why Reward Is Not Learning — Your Agent Is Lying to You](https://github.com/AjayBandiwaddar/learnlens/blob/main/BLOG.md) · **GitHub:** [AjayBandiwaddar/learnlens](https://github.com/AjayBandiwaddar/learnlens) · **PyPI:** [learnlens-rl](https://pypi.org/project/learnlens-rl/)
+**Blog:** [Why Reward Is Not Learning — Your Agent Is Lying to You](https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort/blob/main/BLOG.md) · **GitHub:** [AjayBandiwaddar/learnlens](https://github.com/AjayBandiwaddar/learnlens) · **PyPI:** [learnlens-rl](https://pypi.org/project/learnlens-rl/) · **Training Notebook:** [LearnLens_GRPO_Training.ipynb](https://github.com/AjayBandiwaddar/learnlens/blob/main/LearnLens_GRPO_Training.ipynb)
 
 ---
 
@@ -105,6 +105,14 @@ with GenericEnvClient(
 ## Why This Environment Exists
 
 NumberSort is not a sorting benchmark. It is a controlled diagnostic environment — deliberately engineered so that reward maximization leads to incorrect behavior. The exploit is not a bug. It is the point. Every other environment tries to prevent hacking. This one makes hacking visible, measurable, and eliminates it through training.
+
+## Training Evidence
+
+![LearnLens x GRPO Training Results](learnlens_training_curves.png)
+*Reward during training (left) · LQS before vs after (centre) · Hack index before vs after (right)*
+
+![LearnLens x GRPO — Reward vs Learning Quality](learnlens_training_curves_500steps.png)
+*Standard reward Δ=+0.304 (nearly flat) · LQS Δ=+0.848 · Hack index Δ=-1.00*
 
 GRPO training with an LQS-inspired reward signal eliminates the exploit in 500 steps. Hack index: 1.00 → 0.00. LQS: 0.000 → 0.848.
 

@@ -1,0 +1,122 @@
+[1mdiff --git a/hf_space/BLOG.md b/hf_space/BLOG.md[m
+[1mindex 88530fa..f6e9962 100644[m
+[1m--- a/hf_space/BLOG.md[m
+[1m+++ b/hf_space/BLOG.md[m
+[36m@@ -12,7 +12,7 @@[m [mSimilarly — **an agent can show reward going up and yet not learn anything mea[m
+ [m
+ I'm Ajay. I built LearnLens for Theme 05 — the Wild Card. This is the story of a missing layer I discovered while building my Round 1 environment, and what I did about it.[m
+ [m
+[31m-> **LearnLens is not an environment. It is what makes every environment meaningful.**[m
+[32m+[m[32m> **LearnLens is not an environment. It is what makes every environment more meaningful.**[m
+ [m
+ ---[m
+ [m
+[36m@@ -166,6 +166,17 @@[m [mLQS          = raw_learning × trust + 0.15 × R × trust[m
+ [m
+ > *"The real question is: did the agent actually improve — or did the reward just increase?"*[m
+ [m
+[32m+[m[32m## Results at a Glance[m
+[32m+[m
+[32m+[m[32m| | Reward | LQS | Hack Index |[m
+[32m+[m[32m|---|---|---|---|[m
+[32m+[m[32m| Hacking Agent (before training) | 0.654 | 0.000 | 1.00 |[m
+[32m+[m[32m| **Trained Model (after 500 steps)** | **0.958** | **0.848** | **0.00** |[m
+[32m+[m[32m| **Delta** | **+46.5%** | **+∞ (zero → learning)** | **-1.00** |[m
+[32m+[m
+[32m+[m[32m> Reward improved. LQS went from zero to 0.848. Hack index dropped to zero.[m[41m  [m
+[32m+[m[32m> Standard reward would have called this a minor gain. LQS reveals a complete behavioral shift.[m
+[32m+[m
+ **Before training:** a hacking agent. Reward = 0.654. LQS = **0.000**. Hack Index = **1.00**. Purely exploiting the system.[m
+ [m
+ Standard GRPO would reinforce this — reward is high, gradient says keep going.[m
+[36m@@ -290,17 +301,27 @@[m [mThis is what infrastructure looks like. Not every environment is compatible on d[m
+ [m
+ This approach is not limited to NumberSort. LearnLens wraps **any** OpenEnv environment — zero changes required. The package ships three adapters: `OpenEnvAdapter` for standard OpenEnv spaces, `DirectAdapter` for local environments, and `MCPAdapter` for MCP-based environments — so it connects to any environment architecture without modifications.[m
+ [m
+[31m-The architecture is designed to extend to ORS (Open Reward Standard) — 330+ environments. The adapter interface is in place. Implementation is Phase 2.[m
+[31m-[m
+ Every team building RL environments faces the same problem: bad reward signals waste compute. Hacking agents waste training runs. LearnLens catches both in five episodes, three lines of code.[m
+ [m
+ ---[m
+ [m
+[31m-## What Comes Next[m
+[32m+[m[32m## Post Hackathon[m
+[32m+[m
+[32m+[m[32m**Validation study.** The core hypothesis is testable: does LQS ranking correlate[m[41m [m
+[32m+[m[32mwith human expert judgment better than reward ranking? That's the paper. Every probe[m[41m [m
+[32m+[m[32mis independently measurable, every formula decision is documented and reversible.[m
+[32m+[m
+[32m+[m[32m**LLM-as-judge reasoning probe.** ReasoningProbe currently returns 0.5 neutral when[m[41m [m
+[32m+[m[32mno API key is present. The full implementation — a separate judge model scoring[m[41m [m
+[32m+[m[32mrelevance, coherence, and uncertainty — is designed and stubbed. Not completed in[m[41m [m
+[32m+[m[32mthe hackathon window.[m
+ [m
+[31m-The hypothesis LearnLens makes is testable and falsifiable. Does LQS ranking correlate with human expert judgment of agent quality better than reward ranking does? That is the validation study. That is the paper. The framework is already designed to support it — every probe is independently measurable, every formula decision is documented and reversible.[m
+[32m+[m[32m**ORS adapter.** Architecture extends to Open Reward Standard (330+ environments).[m[41m [m
+[32m+[m[32mInterface is in place. Implementation is Phase 2.[m
+ [m
+[31m-If you are evaluating environments and want to run LearnLens against your own agent — the three-line quick start works on any OpenEnv Space right now. Open an issue or reach out directly. I genuinely want to know where LQS gets it wrong. That feedback, especially from researchers and engineers who build these systems, is exactly what shapes the next version.[m
+[32m+[m[32mIf you run LearnLens against your environment and find where LQS gets it wrong —[m[41m [m
+[32m+[m[32mopen an issue. That feedback, especially from researchers and engineers who build[m[41m [m
+[32m+[m[32mthese systems, is exactly what shapes the next version.[m
+ [m
+ ---[m
+ [m
+[1mdiff --git a/hf_space/README.md b/hf_space/README.md[m
+[1mindex ba3074e..da6d306 100644[m
+[1m--- a/hf_space/README.md[m
+[1m+++ b/hf_space/README.md[m
+[36m@@ -20,7 +20,7 @@[m [mtags:[m
+ [m
+ A live OpenEnv environment built into [LearnLens](https://github.com/AjayBandiwaddar/learnlens) — the universal evaluation layer for agentic RL environments.[m
+ [m
+[31m-**Blog:** [Why Reward Is Not Learning — Your Agent Is Lying to You](https://github.com/AjayBandiwaddar/learnlens/blob/main/BLOG.md) · **GitHub:** [AjayBandiwaddar/learnlens](https://github.com/AjayBandiwaddar/learnlens) · **PyPI:** [learnlens-rl](https://pypi.org/project/learnlens-rl/)[m
+[32m+[m[32m**Blog:** [Why Reward Is Not Learning — Your Agent Is Lying to You](https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort/blob/main/BLOG.md) · **GitHub:** [AjayBandiwaddar/learnlens](https://github.com/AjayBandiwaddar/learnlens) · **PyPI:** [learnlens-rl](https://pypi.org/project/learnlens-rl/) · **Training Notebook:** [LearnLens_GRPO_Training.ipynb](https://github.com/AjayBandiwaddar/learnlens/blob/main/LearnLens_GRPO_Training.ipynb)[m
+ [m
+ ---[m
+ [m
+[36m@@ -106,6 +106,14 @@[m [mwith GenericEnvClient([m
+ [m
+ NumberSort is not a sorting benchmark. It is a controlled diagnostic environment — deliberately engineered so that reward maximization leads to incorrect behavior. The exploit is not a bug. It is the point. Every other environment tries to prevent hacking. This one makes hacking visible, measurable, and eliminates it through training.[m
+ [m
+[32m+[m[32m## Training Evidence[m
+[32m+[m
+[32m+[m[32m![LearnLens x GRPO Training Results](learnlens_training_curves.png)[m
+[32m+[m[32m*Reward during training (left) · LQS before vs after (centre) · Hack index before vs after (right)*[m
+[32m+[m
+[32m+[m[32m![LearnLens x GRPO — Reward vs Learning Quality](learnlens_training_curves_500steps.png)[m
+[32m+[m[32m*Standard reward Δ=+0.304 (nearly flat) · LQS Δ=+0.848 · Hack index Δ=-1.00*[m
+[32m+[m
+ GRPO training with an LQS-inspired reward signal eliminates the exploit in 500 steps. Hack index: 1.00 → 0.00. LQS: 0.000 → 0.848.[m
+ [m
+ ---[m
+[1mdiff --git a/learnlens/__init__.py b/learnlens/__init__.py[m
+[1mindex 047f239..44e4966 100644[m
+[1m--- a/learnlens/__init__.py[m
+[1m+++ b/learnlens/__init__.py[m
+[36m@@ -1,24 +1,38 @@[m
+ """[m
+[31m-learnlens — Universal evaluation layer for OpenEnv agentic RL environments.[m
+[32m+[m[32mlearnlens — Universal evaluation layer for RL environments.[m
+ [m
+ Measures WHAT an agent learned, not just HOW MUCH reward it accumulated.[m
+[32m+[m[32mWorks with OpenEnv, Gymnasium, Stable Baselines 3, Ray RLlib,[m
+[32m+[m[32mand any custom environment.[m
+ [m
+[31m-Quick start:[m
+[32m+[m[32mQuick start (OpenEnv):[m
+     from learnlens import LensWrapper[m
+[31m-[m
+     env = LensWrapper(env_url="https://your-openenv-space.hf.space")[m
+     results = env.evaluate(agent_fn=my_agent)[m
+[31m-    results.print_report()[m
+[31m-    print(results.lqs)   # Learning Quality Score in [0.0, 1.0][m
+[32m+[m[32m    print(results.lqs)[m
+ [m
+[31m-As a native OpenEnv Rubric (training-time reward signal):[m
+[31m-    from learnlens.rubric import LearningQualityRubric[m
+[32m+[m[32mQuick start (Gymnasium):[m
+[32m+[m[32m    from learnlens.adapters import GymnasiumAdapter[m
+[32m+[m[32m    from learnlens import LensWrapper[m
+[32m+[m[32m    wrapper = LensWrapper(adapter=GymnasiumAdapter("CartPole-v1"))[m
+[32m+[m[32m    results = wrapp

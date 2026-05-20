@@ -30,7 +30,7 @@ authors = [
     {name = "Ajay Bandiwaddar", email = "ajaybandiwaddar1@gmail.com"}
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
@@ -83,6 +83,11 @@ rllib = [
     "ray[rllib]>=2.0.0",
 ]
 
+# OpenReward Standard (ORS) — 330+ managed environments at openreward.ai
+ors = [
+    "openreward>=0.1.0",
+]
+
 # ReasoningProbe — LLM judge for CoT-action alignment scoring
 reasoning = [
     "anthropic>=0.25.0",
@@ -94,6 +99,7 @@ all = [
     "gymnasium>=0.26.0",
     "stable-baselines3>=2.0.0",
     "ray[rllib]>=2.0.0",
+    "openreward>=0.1.0",
     "anthropic>=0.25.0",
     "openai>=1.0.0",
 ]

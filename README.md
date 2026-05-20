@@ -3,7 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/learnlens-rl)](https://pypi.org/project/learnlens-rl/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://pypi.org/project/learnlens-rl/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20285446.svg)](https://doi.org/10.5281/zenodo.20285446)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20285446-blue)](https://doi.org/10.5281/zenodo.20285446)
 [![HF Space](https://img.shields.io/badge/🤗%20Demo-Live-blue)](https://huggingface.co/spaces/ajaybandiwaddar01/learnlens-numbersort)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/AjayBandiwaddar/learnlens/blob/main/LearnLens_GRPO_Training.ipynb)
 
@@ -263,5 +263,5 @@ class MyProbe(BaseProbe):
 
 MIT — see [LICENSE](LICENSE).
 
-*Ajay Bandiwaddar · JSS Science and Technology University, Mysuru, India*  
+*Ajay Bandiwaddar - India*  
 *"Reward is what happened. LQS is what was learned."*

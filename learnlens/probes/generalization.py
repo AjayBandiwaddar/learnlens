@@ -22,6 +22,12 @@ If the environment produces identical episodes regardless of seed
 This is optimistic but not wrong — the probe loses signal rather
 than incorrectly penalising the environment.
 
+Note on reward normalisation:
+  Per-step average reward (total_reward / n_steps) is used throughout
+  so that rewards are on the same [0,1] scale as the true task scores
+  used by HackDetectionProbe. This ensures mean_reward in LQSReport
+  is consistent whether populated from this probe or HackDetectionProbe.
+
 References:
   Generalisation in RL: Cobbe et al. (2019) "Quantifying Generalisation
   in Reinforcement Learning", arXiv:1812.02341
@@ -41,6 +47,7 @@ class GeneralizationProbe(BaseProbe):
 
     Attribute last_base_rewards is populated after evaluate() and can
     be used by LensWrapper to avoid re-running episodes for reward stats.
+    Uses per-step average rewards for scale consistency with HackDetectionProbe.
     """
 
     def __init__(self, adapter, config) -> None:
@@ -56,11 +63,18 @@ class GeneralizationProbe(BaseProbe):
         variant_rewards: list[float] = []
 
         for i in range(n_episodes):
+            base_trace = self._run_episode(agent_fn, seed=i)
+            variant_trace = self._run_episode(
+                agent_fn, seed=i + VARIANT_SEED_OFFSET
+            )
+            # Use per-step average reward for scale consistency.
+            # total_reward / n_steps keeps values in [0,1] range for
+            # environments where per-step reward is bounded (most standard envs).
             base_rewards.append(
-                self._run_episode(agent_fn, seed=i).total_reward
+                base_trace.total_reward / max(base_trace.n_steps, 1)
             )
             variant_rewards.append(
-                self._run_episode(agent_fn, seed=i + VARIANT_SEED_OFFSET).total_reward
+                variant_trace.total_reward / max(variant_trace.n_steps, 1)
             )
 
         self.last_base_rewards = base_rewards
